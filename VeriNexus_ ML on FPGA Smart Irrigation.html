@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VeriNexus – ML on FPGA Smart Irrigation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#EEF2EA;--panel:#fff;--ink:#1C2A24;--mute:#5B6B62;--line:#CBD6CB;--leaf:#2F7A48;--water:#1F78A8;--cu:#B06A22;--off:#DDE5DB;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121A16;--panel:#1B2621;--ink:#E6EEE8;--mute:#9AAEA2;--line:#2E3D35;--leaf:#5FBF7F;--water:#5BB6E0;--cu:#E0A05A;--off:#26342D}}
+:root[data-theme="dark"]{--bg:#121A16;--panel:#1B2621;--ink:#E6EEE8;--mute:#9AAEA2;--line:#2E3D35;--leaf:#5FBF7F;--water:#5BB6E0;--cu:#E0A05A;--off:#26342D}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1,h2{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;margin:0}
+h1{font-size:clamp(28px,6vw,44px);line-height:1.1;font-weight:800;max-width:20ch}h2{font-size:20px;margin-bottom:10px}
+.sub{color:var(--mute);margin:8px 0 20px;max-width:62ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.grid{display:grid;gap:14px;grid-template-columns:1fr}@media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
+.row{margin-bottom:14px}.row label{display:flex;justify-content:space-between;font-weight:500;margin-bottom:4px}.row b{color:var(--leaf)}
+input[type=range]{width:100%;accent-color:var(--leaf);height:28px}
+.pipe{overflow-x:auto}.pipe svg{min-width:640px;width:100%;height:auto;display:block}
+.stage rect{fill:var(--off);stroke:var(--line);stroke-width:1.5;transition:fill .25s,stroke .25s}.stage.on rect{fill:var(--panel);stroke:var(--cu);stroke-width:2.5}
+.stage text{fill:var(--ink);font:600 13px "IBM Plex Sans",sans-serif;text-anchor:middle}.stage .v{fill:var(--cu);font-weight:500;font-size:12px}
+.trace{stroke:var(--line);stroke-width:3;fill:none}.pulse{fill:var(--cu)}
+.big{font-family:"Bricolage Grotesque",sans-serif;font-size:32px;font-weight:800;line-height:1.1;margin-bottom:8px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:600;font-size:14px;color:#fff}.yes{background:var(--leaf)}.no{background:var(--mute)}
+.valve{display:flex;align-items:center;gap:10px;margin-top:12px}.drop{width:14px;height:14px;border-radius:50%;background:var(--off)}.drop.on{background:var(--water);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.35}}
+button{font:600 15px "IBM Plex Sans",sans-serif;background:var(--leaf);color:#fff;border:0;border-radius:10px;padding:12px 16px;min-height:44px;cursor:pointer}
+button.alt{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--cu);outline-offset:2px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.fsm{display:flex;gap:6px;flex-wrap:wrap}.chip{padding:6px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--off);font-weight:600;font-size:14px}.chip.on{border-color:var(--cu);background:var(--panel);color:var(--cu)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0}dt{color:var(--mute)}dd{margin:0;font-weight:600}
+.note{color:var(--mute);font-size:13px;margin-top:8px}.ph{color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body><main>
+<h1>Machine learning that runs on the FPGA and waters the crop</h1>
+<p class="sub">VeriNexus, SJCIT ECE. Three sensors feed a quantized classifier written in RTL. The FPGA decides irrigate or wait, then a control FSM drives the pump. Move the sliders to try it.</p>
+
+<div class="panel pipe"><h2>Inside the FPGA</h2>
+<svg viewBox="0 0 900 190" role="img" aria-label="Pipeline from sensors to pump"><path class="trace" d="M70 95H830"/><g id="stages"></g><circle id="pulse" class="pulse" r="7" cx="70" cy="95" opacity="0"/></svg>
+<p class="note">The reading moves through each block as it would in the design. Integer maths only.</p></div>
+
+<div class="grid">
+<div class="panel"><h2>Field sensors</h2>
+<div class="row"><label for="m">Soil moisture <b id="mv"></b></label><input id="m" type="range" min="0" max="100" value="25"></div>
+<div class="row"><label for="t">Temperature <b id="tv"></b></label><input id="t" type="range" min="10" max="45" value="34"></div>
+<div class="row"><label for="h">Air humidity <b id="hv"></b></label><input id="h" type="range" min="0" max="100" value="45"></div>
+<div class="btns"><button id="run">Run one cycle</button><button id="day" class="alt">Play one day</button></div></div>
+
+<div class="panel" aria-live="polite"><h2>Irrigation decision</h2>
+<div class="big" id="dec"></div><span class="badge" id="badge"></span>
+<div class="valve"><span class="drop" id="drop"></span><span id="valve"></span></div>
+<h2 style="margin-top:18px">Control FSM</h2><div class="fsm" id="fsm"></div>
+<p class="note" id="dayout">Press Play one day to compare with a fixed timer.</p></div>
+</div>
+
+<div class="panel"><h2>Golden model vs RTL check</h2>
+<dl><dt>Python (float) score</dt><dd id="zf"></dd><dt>RTL (fixed-point) score</dt><dd id="zq"></dd><dt>Both decisions agree</dt><dd id="agree"></dd><dt>Agreement over all input combinations</dt><dd id="grid"></dd></dl>
+<p class="note">Float weights are rounded to 4 fractional bits and inputs to 8 bits, like the hardware. The demo model is a simple logistic classifier, not your trained model.</p></div>
+
+<div class="panel"><h2>Results to fill after synthesis</h2>
+<dl><dt>Model accuracy / F1</dt><dd class="ph">after training</dd><dt>LUT / FF / BRAM / DSP</dt><dd class="ph">after synthesis</dd><dt>Inference latency, power</dt><dd class="ph">after implementation</dd></dl></div>
+</main>
+<script>
+const $=i=>document.getElementById(i),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const W={m:-6.8,t:2.7,h:-1.4,b:2.3},Q={m:Math.round(W.m*16),t:Math.round(W.t*16),h:Math.round(W.h*16),b:Math.round(W.b*16)};
+const N=[["Sensors","3 inputs"],["ADC","8-bit"],["Preprocess","scale 0-255"],["ML inference","Q4.4 weights"],["Control FSM","5 states"],["Pump driver","MOSFET"]],X=[70,225,380,520,670,830];
+$("stages").innerHTML=N.map((n,i)=>`<g class="stage" id="s${i}"><rect x="${X[i]-65}" y="55" width="130" height="80" rx="10"/><text x="${X[i]}" y="88">${n[0]}</text><text class="v" id="v${i}" x="${X[i]}" y="112">${n[1]}</text></g>`).join("");
+const ST=["IDLE","SENSE","INFER","PUMP ON","COOLDOWN"];$("fsm").innerHTML=ST.map((s,i)=>`<span class="chip" id="f${i}">${s}</span>`).join("");
+function calc(m,t,h){const m8=Math.round(m*2.55),t8=Math.round((t-10)*255/35),h8=Math.round(h*2.55);
+ const zf=W.m*m/100+W.t*(t-10)/35+W.h*h/100+W.b,Z=Q.m*m8+Q.t*t8+Q.h*h8+Q.b*255;return{m8,t8,h8,zf,Z,df:zf>0,dq:Z>0}}
+function fsm(i){ST.forEach((_,k)=>$("f"+k).classList.toggle("on",k===i))}
+let id=0;function pulse(){const n=++id,p=$("pulse");N.forEach((_,i)=>$("s"+i).classList.remove("on"));
+ if(matchMedia("(prefers-reduced-motion:reduce)").matches){N.forEach((_,i)=>$("s"+i).classList.add("on"));return}
+ p.setAttribute("opacity",1);const t0=performance.now();(function f(now){if(n!==id)return;const k=Math.min(1,(now-t0)/1400),x=70+760*k;p.setAttribute("cx",x);
+ X.forEach((v,i)=>{if(x>=v-5)$("s"+i).classList.add("on")});k<1?requestAnimationFrame(f):p.setAttribute("opacity",0)})(t0)}
+function render(anim){const m=+$("m").value,t=+$("t").value,h=+$("h").value,c=calc(m,t,h);
+ $("mv").textContent=m+"%";$("tv").textContent=t+" °C";$("hv").textContent=h+"%";
+ $("v0").textContent=`${m}% ${t}° ${h}%`;$("v1").textContent=`${c.m8}/${c.t8}/${c.h8}`;$("v2").textContent="x/255";$("v3").textContent=`Z=${c.Z}`;$("v4").textContent=c.dq?"→ PUMP ON":"→ IDLE";$("v5").textContent=c.dq?"ON":"OFF";
+ $("dec").textContent=c.dq?"Irrigation required":"No irrigation needed";$("badge").textContent=c.dq?"Pump on":"Pump off";$("badge").className="badge "+(c.dq?"yes":"no");
+ $("drop").classList.toggle("on",c.dq);$("valve").textContent=c.dq?"Pump running":"Pump off";
+ $("zf").textContent=c.zf.toFixed(3);$("zq").textContent=c.Z;$("agree").textContent=c.df===c.dq?"Yes":"No (near the boundary)";
+ anim?pulse():N.forEach((_,i)=>$("s"+i).classList.add("on"));return c}
+let ag=0,tot=0;for(let m=0;m<=100;m+=2)for(let t=10;t<=45;t+=1)for(let h=0;h<=100;h+=2){const c=calc(m,t,h);tot++;if(c.df===c.dq)ag++}
+$("grid").textContent=(ag/tot*100).toFixed(2)+"% of "+tot;
+["m","t","h"].forEach(i=>$(i).addEventListener("input",()=>{render(true);fsm(0)}));
+let busy=false;$("run").onclick=()=>{if(busy)return;busy=true;const c=render(true),seq=c.dq?[1,2,3,4,0]:[1,2,4,0];let k=0;
+ const iv=setInterval(()=>{fsm(seq[k]);if(++k>=seq.length){clearInterval(iv);busy=false}},500)};
+let tm=null;$("day").onclick=()=>{if(tm){clearInterval(tm);tm=null;$("day").textContent="Play one day";return}
+ let hr=0,ev=0,mo=75;$("day").textContent="Stop";
+ tm=setInterval(()=>{const s=Math.sin((hr-8)/24*2*Math.PI);mo=Math.max(5,mo-2.4);
+  $("m").value=Math.round(mo);$("t").value=Math.round(24+9*s);$("h").value=Math.round(60-12*s);
+  const c=render(false);if(c.dq){ev++;mo=Math.min(100,mo+32)}
+  $("dayout").textContent=`Hour ${hr}:00. Smart system: ${ev} watering event${ev===1?"":"s"}. Fixed timer: ${Math.floor(hr/6)+1>4?4:Math.floor(hr/6)+1} so far (every 6 hours).`;
+  if(++hr>23){clearInterval(tm);tm=null;$("day").textContent="Play one day"}},450)};
+render(false);fsm(0);
+</script></body></html>

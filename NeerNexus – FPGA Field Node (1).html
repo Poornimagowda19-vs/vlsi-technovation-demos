@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NeerNexus – FPGA Field Node</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;800&family=Noto+Sans+Kannada:wght@400;600&display=swap">
+<style>
+:root{--bg:#F4F1E6;--panel:#fff;--ink:#22301F;--mute:#6A7566;--line:#DDD8C4;--leaf:#2E7D3E;--gold:#B7860B;--water:#1F78A8;--red:#B3261E;--off:#E9E5D2;--btn:#fff;box-sizing:border-box}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141A12;--panel:#1E271B;--ink:#E8EEE2;--mute:#9DAA97;--line:#323D2E;--leaf:#6CC47C;--gold:#E8B94A;--water:#5BB6E0;--red:#FF7B72;--off:#2A3526;--btn:#10200F}}
+:root[data-theme="dark"]{--bg:#141A12;--panel:#1E271B;--ink:#E8EEE2;--mute:#9DAA97;--line:#323D2E;--leaf:#6CC47C;--gold:#E8B94A;--water:#5BB6E0;--red:#FF7B72;--off:#2A3526;--btn:#10200F}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "Nunito Sans","Noto Sans Kannada",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+#app{max-width:440px;margin:0 auto;height:100%;display:flex;flex-direction:column;border-inline:1px solid var(--line)}
+header{padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+header h1{margin:0;font-size:22px;font-weight:800;color:var(--leaf)}header small{display:block;color:var(--mute);font-size:12px}
+.sel{font-weight:600;font-size:13px;font-family:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 12px;min-height:40px}
+main{flex:1;overflow-y:auto;padding:0 16px 16px}
+nav{display:flex;border-top:1px solid var(--line);background:var(--panel);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;border:0;padding:10px 0 8px;color:var(--mute);font-weight:600;font-size:12px;font-family:inherit;min-height:52px;cursor:pointer}nav button .i{display:block;font-size:20px}nav button.on{color:var(--leaf)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:15px;font-weight:800}
+.banner{border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:12px;background:var(--off)}.banner.off{background:transparent;border:1.5px solid var(--gold);color:var(--gold)}
+.top{display:flex;gap:14px;align-items:center}.ring{width:104px;flex:none;position:relative}.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:22px;font-weight:800}
+.kv{flex:1;display:grid;gap:6px}.kv div{display:flex;justify-content:space-between;font-size:14px;color:var(--mute)}.kv strong{color:var(--ink)}
+.pump{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}.dot{width:14px;height:14px;border-radius:50%;background:var(--off);flex:none}.dot.on{background:var(--water);animation:bl 1s infinite}@keyframes bl{50%{opacity:.35}}
+.mut{color:var(--mute);font-size:13px}
+.seg{display:flex;gap:6px;margin-top:10px}.seg button,.btn{flex:1;font-weight:700;font-size:14px;font-family:inherit;border-radius:10px;min-height:44px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;padding:8px}.seg button.on,.btn.p{background:var(--leaf);color:var(--btn);border-color:var(--leaf)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--leaf);height:26px}.row label{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.bars{display:flex;gap:8px;align-items:flex-end;height:120px;margin:8px 0}.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--mute)}.bars i{display:block;width:100%;border-radius:6px 6px 0 0;background:var(--leaf)}.bars .t i{background:var(--gold)}
+.big{font-size:30px;font-weight:800;color:var(--leaf)}
+ul{list-style:none;margin:0;padding:0}li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:8px 12px;font-weight:600;font-size:13px;font-family:inherit;min-height:40px;cursor:pointer}
+.msg{padding:10px 12px;border-radius:14px;margin-bottom:8px;max-width:88%}.msg.u{background:var(--leaf);color:var(--btn);margin-left:auto}.msg.a{background:var(--off)}
+.up{color:var(--leaf)}.dn{color:var(--red)}
+@media(prefers-reduced-motion:reduce){.dot.on{animation:none}}
+</style></head>
+<body><div id="app">
+<header><div><h1>NeerNexus</h1><small id="sub">Field 1 · FPGA node</small></div><select class="sel" id="lang" aria-label="Language"><option value="en">English</option><option value="kn">ಕನ್ನಡ</option></select></header>
+<main id="main">
+<section id="t0">
+<div class="banner" id="net"></div>
+<div class="card"><div class="top"><div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="var(--off)" stroke-width="10"/><circle id="arc" cx="50" cy="50" r="42" fill="none" stroke="var(--water)" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/></svg><b id="mv"></b></div>
+<div class="kv"><div><span id="l1">Soil moisture</span><strong id="mt"></strong></div><div><span id="l2">Temperature</span><strong id="tv"></strong></div><div><span id="l3">Humidity</span><strong id="hv"></strong></div></div></div></div>
+<div class="card"><h2>Pump</h2><div class="pump"><span class="dot" id="dot"></span><span id="ptxt"></span></div><p class="mut" id="why" style="margin:6px 0 0"></p>
+<div class="seg" id="mode"><button data-m="auto" class="on">Auto (FPGA)</button><button data-m="on">Force ON</button><button data-m="off">Force OFF</button></div><p class="mut" id="ovr" style="margin:8px 0 0"></p></div>
+<div class="card"><h2>Field simulator</h2>
+<div class="row"><label for="sm">Soil moisture <span id="sm1"></span></label><input id="sm" type="range" min="0" max="100" value="28"></div>
+<div class="row"><label for="st">Temperature <span id="st1"></span></label><input id="st" type="range" min="10" max="45" value="34"></div>
+<div class="row"><label for="sh">Humidity <span id="sh1"></span></label><input id="sh" type="range" min="0" max="100" value="45"></div>
+<div class="seg"><button id="wifi" class="on">Internet: online</button></div></div>
+</section>
+<section id="t1" hidden>
+<div class="card"><h2>Water ledger · this week</h2><div class="bars" id="bars"></div><div class="mut">Gold bar is today. Dashed baseline is a fixed 40 L timer.</div></div>
+<div class="card"><div class="mut">Water saved vs fixed timer</div><div class="big" id="saved"></div><div class="mut">Sample figures for the demo. Today updates live (2 L per pump minute).</div></div>
+<div class="card"><h2>Pump events</h2><ul id="ev"><li class="mut">No events yet.</li></ul></div>
+</section>
+<section id="t2" hidden>
+<div class="card"><h2>Crop settings sent to the FPGA</h2><select class="sel" id="crop" style="width:100%;border-radius:12px" aria-label="Crop"><option value="0">Tomato</option><option value="0.4">Chilli</option><option value="-0.8">Ragi</option><option value="0.2">Maize</option></select>
+<p class="mut" id="cropmsg" style="margin:8px 0 0"></p></div>
+<div class="card"><h2>Mandi prices (sample data)</h2><ul><li><span>Tomato</span><span class="up">▲ rising</span></li><li><span>Chilli</span><span class="dn">▼ falling</span></li><li><span>Ragi</span><span>● steady</span></li></ul><p class="mut" style="margin:6px 0 0">Connect your live price source here.</p></div>
+</section>
+<section id="t3" hidden>
+<div class="chips" id="chips"></div><div id="chat"><div class="msg a">Ask me about your field.</div></div>
+</section>
+</main>
+<nav id="nav"></nav></div>
+<script>
+const $=i=>document.getElementById(i),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const T=[["🏠","Home"],["📒","Ledger"],["🌾","Crop"],["🎙️","Ask"]];
+$("nav").innerHTML=T.map((t,i)=>`<button data-i="${i}" class="${i?"":"on"}"><span class="i">${t[0]}</span>${t[1]}</button>`).join("");
+$("nav").onclick=e=>{const b=e.target.closest("button");if(!b)return;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));for(let i=0;i<4;i++)$("t"+i).hidden=i!=b.dataset.i;if(b.dataset.i==1)drawL()};
+const KN={l1:"ಮಣ್ಣಿನ ತೇವಾಂಶ",l2:"ತಾಪಮಾನ",l3:"ಆರ್ದ್ರತೆ",on:"ಪಂಪ್ ಚಾಲನೆಯಲ್ಲಿದೆ",off:"ಪಂಪ್ ಆಫ್",sv:"ನೀರು ಉಳಿತಾಯ"},EN={l1:"Soil moisture",l2:"Temperature",l3:"Humidity",on:"Pump running",off:"Pump off",sv:"Water saved"};
+let L=EN,mode="auto",ovEnd=0,pump=false,online=true,queue=0,usedToday=0,mins=0,bias=0,evs=[];
+const WK=[["Mon",22],["Tue",30],["Wed",18],["Thu",26],["Fri",24],["Sat",20]],BASE=40;
+function z(){const m=+$("sm").value/100,t=(+$("st").value-10)/35,h=+$("sh").value/100;return -6.8*m+2.7*t-1.4*h+2.3+bias}
+function sync(){$("net").className="banner"+(online?"":" off");$("net").textContent=online?"Synced just now. The FPGA node sends readings to Firebase.":`Offline. The FPGA is still deciding on its own. ${queue} readings will sync later.`;$("wifi").textContent="Internet: "+(online?"online":"offline");$("wifi").classList.toggle("on",online)}
+function tick(){mins++;let m=+$("sm").value;const zz=z();
+ if(mode==="auto"){if(!pump&&zz>0.5)pump=true;else if(pump&&zz<-0.5)pump=false}
+ else{if(Date.now()>ovEnd){mode="auto";setMode()}else pump=mode==="on"}
+ m=clamp(m+(pump?3:-0.5-(+$("st").value-20)/60),0,100);$("sm").value=m;
+ if(pump){usedToday+=2;if(evs.length===0||evs[0].end){evs.unshift({s:mins,end:false,mode})}}else if(evs.length&&!evs[0].end){evs[0].end=mins}
+ if(!online)queue++;view()}
+function view(){const m=Math.round(+$("sm").value);$("mv").textContent=m+"%";$("mt").textContent=m+"%";$("arc").setAttribute("stroke-dashoffset",264*(1-m/100));
+ $("tv").textContent=$("st").value+" °C";$("hv").textContent=$("sh").value+"%";$("sm1").textContent=m+"%";$("st1").textContent=$("st").value+" °C";$("sh1").textContent=$("sh").value+"%";
+ $("l1").textContent=L.l1;$("l2").textContent=L.l2;$("l3").textContent=L.l3;$("ptxt").textContent=pump?L.on:L.off;$("dot").classList.toggle("on",pump);
+ $("why").textContent=mode==="auto"?(pump?"FPGA decision: irrigation required.":"FPGA decision: no irrigation needed."):"Manual override active.";
+ $("ovr").textContent=mode==="auto"?"":`Override ends in ${Math.max(0,Math.ceil((ovEnd-Date.now())/1000))} s (safety timeout).`;sync()}
+function setMode(){document.querySelectorAll("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.m===mode))}
+$("mode").onclick=e=>{const b=e.target.closest("button");if(!b)return;mode=b.dataset.m;if(mode!=="auto")ovEnd=Date.now()+20000;setMode();view()};
+$("wifi").onclick=()=>{online=!online;if(online)queue=0;view()};
+$("lang").onchange=e=>{L=e.target.value==="kn"?KN:EN;view();$("saved").textContent&&drawL()};
+$("crop").onchange=e=>{bias=+e.target.value;$("cropmsg").textContent=`Sent to the FPGA node: ${e.target.selectedOptions[0].text} settings (sample thresholds).`;view()};
+function drawL(){const d=WK.concat([["Today",usedToday]]),mx=Math.max(BASE,...d.map(x=>x[1]));
+ $("bars").innerHTML=d.map((x,i)=>`<div class="${i==6?"t":""}"><i style="height:${x[1]/mx*100}%"></i>${x[0]}</div>`).join("");
+ const tot=d.reduce((s,x)=>s+x[1],0),sv=Math.round((1-tot/(BASE*7))*100);$("saved").textContent=(L===KN?KN.sv+": ":"")+sv+"%";
+ $("ev").innerHTML=evs.length?evs.slice(0,6).map(e=>`<li><span>${e.mode==="auto"?"Auto (FPGA)":"Manual "+e.mode}</span><span class="mut">min ${e.s}${e.end?" to "+e.end:" · running"}</span></li>`).join(""):'<li class="mut">No events yet.</li>'}
+const Q={"Is the pump on?":()=>pump?"Yes, the pump is running.":"No, the pump is off. "+(mode==="auto"?"The FPGA says the soil does not need water.":"It is in manual override."),
+"Water saved this week?":()=>{drawL();return "About "+$("saved").textContent.replace(/\D+/g,"")+"% less water than a fixed timer (sample data)."},
+"What should I do now?":()=>(+$("sm").value<30?"Soil is dry. Let the FPGA irrigate, or check the pump.":"Soil moisture is fine. No action needed.")+(online?"":" You are offline, so the node keeps working and will sync.")};
+$("chips").innerHTML=Object.keys(Q).map(k=>`<button class="chip">${k}</button>`).join("");
+$("chips").onclick=e=>{const b=e.target.closest("button");if(!b)return;const a=Q[b.textContent]();$("chat").insertAdjacentHTML("beforeend",`<div class="msg u">${b.textContent}</div><div class="msg a">${a}</div>`);$("main").scrollTop=1e5;try{speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(a))}catch(x){}};
+["sm","st","sh"].forEach(i=>$(i).addEventListener("input",view));
+setInterval(tick,1000);view();
+</script></body></html>
